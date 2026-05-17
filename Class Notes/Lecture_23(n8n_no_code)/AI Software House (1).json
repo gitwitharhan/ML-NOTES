@@ -1,0 +1,289 @@
+{
+  "name": "AI Software House",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI Software House",
+        "formDescription": "A multi-agent team: PM, Developer, and QA — powered by Groq.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "What should we build?"
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -1312,
+        -48
+      ],
+      "id": "b50c2c71-4d1d-4193-9c7f-23365c1bbf87",
+      "name": "On form submission",
+      "webhookId": "eb274996-1b9e-4442-b51b-7e3f79344d55"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -1104,
+        144
+      ],
+      "id": "870769cf-59ed-4e18-9b15-12c6fb7f2829",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "WzRl7gljXcBlDz4z",
+          "name": "Groq account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a senior PM. Convert the user's request into \nnumbered technical requirements.\n\nUser Request: {{ $json['What should we build?'] }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -1104,
+        -48
+      ],
+      "id": "db2d6cb5-62bf-4c4d-a6cd-24ae421d693e",
+      "name": "PM Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        144
+      ],
+      "id": "013caa58-f1ef-4861-beec-42b815049131",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "WzRl7gljXcBlDz4z",
+          "name": "Groq account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a senior Python developer.\n\nRequirements:\n{{ $('PM Agent').item.json.text }}\n\nWrite complete, production-ready Python code that \nfulfils ALL requirements above.\n- Include all imports\n- Add comments\n- Handle edge cases\n- Make it fully runnable\n\nReturn ONLY the code, nothing else.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -752,
+        -48
+      ],
+      "id": "bb0a05a0-6f52-4deb-b7d7-8a7d4ef5aed1",
+      "name": "Developer Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        224
+      ],
+      "id": "3a244f52-7828-4ffd-b7d5-b62649880514",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "WzRl7gljXcBlDz4z",
+          "name": "Groq account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a QA engineer.\n\nRequirements:\n{{ $('PM Agent').item.json.text }}\n\nCode:\n{{ $('Developer Agent').item.json.text }}\n\nDoes this code attempt to implement the requirements?\nIf yes, respond with exactly: APPROVED\nIf the code is completely missing or empty, explain why.\nBe lenient — approve if the intent is correct.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -320,
+        -48
+      ],
+      "id": "6a5fc800-9817-489e-8ad5-00306aa7400a",
+      "name": "QA Agent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "92e87660-7022-42e0-a493-590ded49446c",
+              "leftValue": "={{ $json.text.toUpperCase().includes('APPROVED') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        32,
+        -48
+      ],
+      "id": "801c6388-9f34-4cfe-b4ee-1eb6d47e53c7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "AI Software House - Code Ready!",
+        "completionMessage": "={{ $('Developer Agent').item.json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        -144
+      ],
+      "id": "bac74059-6caf-491e-aff0-de842bd78142",
+      "name": "Form",
+      "webhookId": "07bdeaba-48bf-46f6-8595-08311ddfd076"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "PM Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PM Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM Agent": {
+      "main": [
+        [
+          {
+            "node": "Developer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Developer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "QA Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Developer Agent": {
+      "main": [
+        [
+          {
+            "node": "QA Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QA Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1b28f5d2-41f7-4039-beae-ab170d6c892d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d75a35c582c282f51b5b5cdb7daa4aff1a71d5050ec10de54d93102c604ad557"
+  },
+  "id": "H8lyhdjSJehLpyjl",
+  "tags": []
+}
